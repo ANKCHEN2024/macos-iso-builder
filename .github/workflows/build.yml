@@ -55,16 +55,23 @@ jobs:
         id: create_image
         continue-on-error: true
         run: |
-          if [ "${{ github.event.inputs.image_format }}" == "iso" ]; then
-            sudo bash mkmaciso "${{ github.event.inputs.macos_version }}" iso
+          MACOS_VER="${{ github.event.inputs.macos_version }}"
+          IMG_FMT="${{ github.event.inputs.image_format }}"
+          IMG_FMT=$(echo "$IMG_FMT" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+          if [ "$IMG_FMT" != "iso" ]; then IMG_FMT="dmg"; fi
+          echo "Requested macOS: $MACOS_VER"
+          echo "Requested format: $IMG_FMT"
+          echo "image_format=$IMG_FMT" >> $GITHUB_OUTPUT
+          if [ "$IMG_FMT" = "iso" ]; then
+            sudo bash mkmaciso "$MACOS_VER" iso
             echo "image_name=$(basename *.iso)" >> $GITHUB_OUTPUT
           else
-            sudo bash mkmaciso "${{ github.event.inputs.macos_version }}" dmg
+            sudo bash mkmaciso "$MACOS_VER" dmg
             echo "image_name=$(basename *.dmg.img)" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload ISO artifact
-        if: github.event.inputs.image_format == 'iso' && steps.create_image.outcome == 'success'
+        if: steps.create_image.outputs.image_format == 'iso' && steps.create_image.outcome == 'success'
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.create_image.outputs.image_name }}
@@ -73,7 +80,7 @@ jobs:
           retention-days: 15
 
       - name: Upload DMG artifact
-        if: github.event.inputs.image_format == 'dmg' && steps.create_image.outcome == 'success'
+        if: steps.create_image.outputs.image_format == 'dmg' && steps.create_image.outcome == 'success'
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.create_image.outputs.image_name }}
@@ -90,7 +97,7 @@ jobs:
             echo "> [!WARNING]" >> $GITHUB_STEP_SUMMARY
             echo "> This runner may have network issues. Please **re-run the workflow** to try a different runner." >> $GITHUB_STEP_SUMMARY
           elif [ "${{ job.status }}" == "success" ]; then
-            if [ "${{ github.event.inputs.image_format }}" == "iso" ]; then
+            if [ "${{ steps.create_image.outputs.image_format }}" == "iso" ]; then
               echo "## Successfully built $(basename *.iso)" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "> [!NOTE]" >> $GITHUB_STEP_SUMMARY

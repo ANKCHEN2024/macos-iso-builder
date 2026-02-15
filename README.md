@@ -48,6 +48,33 @@ Lion, Mountain Lion, Mavericks, Yosemite, El Capitan, Sierra, High Sierra, Mojav
 7. Once completed, reload the page and scroll down to the **Artifacts** section. Click the artifact link to start downloading (e.g., `macOS_Sequoia_15.7.3.iso`).
 8. Unzip the downloaded artifact and you're done.
 
+### Windows users (no Mac, no GitHub in browser)
+
+On Windows you can use the helper script to trigger a build and download the image:
+
+1. **Option A – with GitHub CLI (recommended)**  
+   Install [GitHub CLI](https://cli.github.com/) and log in:
+   ```powershell
+   winget install GitHub.cli
+   gh auth login
+   ```
+   Then run:
+   ```powershell
+   .\mkmaciso-windows.ps1
+   ```
+   Or double-click `mkmaciso-windows.bat`. The script will ask for macOS version and format (ISO/DMG), start the workflow, wait for it to finish, and download the artifact to your Downloads folder.
+
+2. **Option B – without GitHub CLI**  
+   Run `.\mkmaciso-windows.ps1` (or `mkmaciso-windows.bat`). When prompted, open the Actions page in your browser, run the **"Build Full Installer ISO/DMG image"** workflow with your chosen version and format, then download the artifact from the completed run.
+
+Command-line usage:
+```powershell
+.\mkmaciso-windows.ps1 -Version Tahoe -Format iso
+.\mkmaciso-windows.ps1 -Version Sequoia -Format dmg
+```
+
+Note: The actual image is built in the cloud (GitHub Actions on macOS runners). Windows is only used to trigger the job and download the result; building the installer requires macOS tools (e.g. `hdiutil`).
+
 ### Already have macOS? Run `mkmaciso` locally
 
 Quick run using Terminal.app (change `tahoe` to whatever you want):
